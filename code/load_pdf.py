@@ -1,6 +1,7 @@
 from pymupdf import *
 from pathlib import Path   
-import numpy as np                             
+import numpy as np   
+import ollama                          
 
 def clean_text(text: str) -> str:
     """Nettoyage léger : enlève les espaces en trop et les lignes vides multiples."""
@@ -25,9 +26,27 @@ def chunking(list_page, size_chunk, depassement) :        #Decoupe les pages en 
         longueur = len(page[2])
         i = 0
         while i < longueur : 
-            list_chuck.append(page[0], page[1], page[2][(i + size_chunk) : min(i + size_chunk, longueur - 1)])
+            list_chuck.append([page[0], page[1], page[2][(i + size_chunk) : min(i + size_chunk, longueur - 1)]])
             i += size_chunk - depassement
     return list_chuck
+
+def embed(list_chuck) : #Prend la list_chuck et vectorise le texte
+    list_texte = []
+    info_docpage = []
+    for elt in list_chuck : 
+        list_texte.append(elt[2])
+        info_docpage.append([elt[0], elt[1]])
+    vectored = ollama.embed(model="bge-m3", input = list_texte)
+    vectorisation = np.array(vectored.embeddings)
+    return (vectorisation, info_docpage)
+
+print(embed(chunking(load_pdf("Doc_info/guide_asso_test.pdf"), 600, 150)))
+
+        
+    
+    
+
+
 
 
 
